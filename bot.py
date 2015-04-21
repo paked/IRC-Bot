@@ -10,6 +10,7 @@ import threading
 
 class Bot:
     def __init__(self):
+        self._messageCount = 0
         self.commandList = {}
 
         self.config = {
@@ -19,14 +20,13 @@ class Bot:
         self.permissions = {
 
             "tuckismad": 3,
-            "TyrantWarship": 1
+            "TyrantWarship": 1,
+            "hcwool": 2
         }
 
         self.timedEvents = {
             'livestreamChecker': [self.CheckLiveStreams, time(), 10],
-            'hangoutsAnnoucenment': [
-                lambda:
-                self.Send(self.channel, "24/7 Hangouts room, check it out here! http://goo.gl/HkFFqg"), time(), 3600]
+            'hangoutsAnnoucenment': [self.HangoutsNotify, time(), 3600]
         }
 
         self.host = "irc.freenode.net"
@@ -46,6 +46,11 @@ class Bot:
         self.irc.send(bytes("JOIN " + self.channel + "\r\n", "UTF-8"))
 
         self.AddModules()
+
+    def HangoutsNotify(self):
+        if self._messageCount > 10:
+            self.Send(self.channel, "24/7 Hangouts room, check it out here! http://goo.gl/HkFFqg")
+            self._messageCount = 0
 
     def Send(self, target, message):
         '''
@@ -130,6 +135,7 @@ class Bot:
         while True:
             try:
                 data = self.irc.recv(4096).decode("UTF-8", "replace")
+                self._messageCount += 1
             except:
                 pass
             if(data.find("PING") != -1):
